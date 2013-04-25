@@ -32,11 +32,10 @@ class PrintFunctions(ast.NodeVisitor):
 
 def main():
     """Hello world"""
-    with open("annotation.py") as this_file:
+    with open("example_module.py") as this_file:
         code = this_file.read()
 
-    p = ast.parse("def main():"
-                  "    3+4")
+    p = ast.parse(code)
     PrintFunctions().visit(p)
 
 if __name__ == "__main__":
