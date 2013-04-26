@@ -1,0 +1,78 @@
+diff -r 168e6b411f45 node_classes.py
+--- a/node_classes.py	Thu Apr 25 13:33:10 2013 +0200
++++ b/node_classes.py	Fri Apr 26 19:23:30 2013 -0400
+@@ -251,6 +251,23 @@
+ 
+ #####################   node classes   ########################################
+ 
++class Arg(NodeNG, ParentAssignTypeMixin):
++    """class representing a python3k argument"""
++    _astng_fields = ('name', 'annotation')
++    name = None
++    annotation = None
++
++    def __init__(self, name=None, annotation=None):
++        self.name = name
++        self.annotation = annotation
++
++    def format_args(self):
++        if self.annotation:
++            return self.name.name + ": " + self.annotation.name
++        else:
++            return self.name.name
++
++
+ class Arguments(NodeNG, AssignTypeMixin):
+     """class representing an Arguments node"""
+     _astng_fields = ('args', 'defaults')
+@@ -323,6 +340,8 @@
+     for i, arg in enumerate(args):
+         if isinstance(arg, Tuple):
+             values.append('(%s)' % _format_args(arg.elts))
++        elif isinstance(arg, Arg):
++            values.append(arg.format_args())
+         else:
+             values.append(arg.name)
+             if defaults is not None and i >= default_offset:
+diff -r 168e6b411f45 nodes.py
+--- a/nodes.py	Thu Apr 25 13:33:10 2013 +0200
++++ b/nodes.py	Fri Apr 26 19:23:30 2013 -0400
+@@ -37,7 +37,7 @@
+ 
+ __docformat__ = "restructuredtext en"
+ 
+-from logilab.astng.node_classes import Arguments, AssAttr, Assert, Assign, \
++from logilab.astng.node_classes import Arguments, Arg, AssAttr, Assert, Assign, \
+     AssName, AugAssign, Backquote, BinOp, BoolOp, Break, CallFunc, Compare, \
+     Comprehension, Const, Continue, Decorators, DelAttr, DelName, Delete, \
+     Dict, Discard, Ellipsis, EmptyNode, ExceptHandler, Exec, ExtSlice, For, \
+@@ -49,7 +49,7 @@
+     ListComp, SetComp, Function, Class
+ 
+ ALL_NODE_CLASSES = (
+-    Arguments, AssAttr, Assert, Assign, AssName, AugAssign,
++    Arguments, Arg, AssAttr, Assert, Assign, AssName, AugAssign,
+     Backquote, BinOp, BoolOp, Break,
+     CallFunc, Class, Compare, Comprehension, Const, Continue,
+     Decorators, DelAttr, DelName, Delete,
+diff -r 168e6b411f45 rebuilder.py
+--- a/rebuilder.py	Thu Apr 25 13:33:10 2013 +0200
++++ b/rebuilder.py	Fri Apr 26 19:23:30 2013 -0400
+@@ -812,9 +812,14 @@
+ 
+     def visit_arg(self, node, parent):
+         """visit a arg node by returning a fresh AssName instance"""
+-        # the <arg> node is coming from py>=3.0, but we use AssName in py2.x
+-        # XXX or we should instead introduce a Arg node in astng ?
+-        return self.visit_assname(node, parent, node.arg)
++        newnode = new.Arg()
++        _set_infos(node, newnode, parent)
++        if node.annotation is not None:
++            newnode.annotation = self.visit(node.annotation, newnode)
++        if node.arg is not None:
++            newnode.name = self.visit_assname(node, newnode, node.arg)
++        newnode.set_line_info(newnode.last_child())
++        return newnode
+ 
+     def visit_excepthandler(self, node, parent):
+         """visit an ExceptHandler node by returning a fresh instance of it"""
