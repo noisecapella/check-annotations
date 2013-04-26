@@ -1,42 +1,45 @@
 #!/usr/bin/env python3
 """Annotations"""
 
+from logilab.astng import builder
+from logilab.astng.utils import ASTWalker
+from logilab.astng.scoped_nodes import Function
 
-def func(num1: int,
-         num2: int) -> int or None:
-    """Add two numbers"""
-    return num1 + num2
-
-import ast
+abuilder = builder.ASTNGBuilder()
 
 
-class PrintFunctions(ast.NodeVisitor):
+class PrintFunctions:
     """Print functions"""
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def set_context(self, node, child_node):
+        pass
+
+    def visit_function(self, node: Function):
         """Print function definitions"""
 
         print()
-        for subnode in node.body:
-            PrintFunctions().visit(subnode)
+        print(node)
+        print(node.args)
 
-        print("def %s(" % node.name, end="")
+        #def get_annotation(annotation : str) -> str:
+        #    if annotation:
+        #        return ast.dump(annotation)
+        #    else:
+        #        return "None"
+        #annotations = [get_annotation(argument.annotation) for argument in node.args.args]
+        #print("%s" % ", ".join(annotations), end=")\n")
 
-        def get_annotation(annotation : str) -> str:
-            if annotation:
-                return ast.dump(annotation)
-            else:
-                return "None"
-        annotations = [get_annotation(argument.annotation) for argument in node.args.args]
-        print("%s" % ", ".join(annotations), end=")\n")
-
+class Handler:
+    def set_context(self, a, b):
+        pass
 
 def main():
     """Hello world"""
     with open("example_module.py") as this_file:
         code = this_file.read()
 
-    p = ast.parse(code)
-    PrintFunctions().visit(p)
+    p = abuilder.string_build(code)
+    handler = PrintFunctions()
+    ASTWalker(handler).walk(p)
 
 if __name__ == "__main__":
     main()
