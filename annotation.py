@@ -17,8 +17,7 @@ class PrintFunctions:
         """Print function definitions"""
 
         print()
-        print(node)
-        print(node.args)
+        print(node.as_string())
 
         #def get_annotation(annotation : str) -> str:
         #    if annotation:
