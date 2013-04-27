@@ -1,6 +1,21 @@
+diff -r 168e6b411f45 as_string.py
+--- a/as_string.py	Thu Apr 25 13:33:10 2013 +0200
++++ b/as_string.py	Sat Apr 27 14:23:40 2013 -0400
+@@ -256,8 +256,9 @@
+         """return an astng.Function node as string"""
+         decorate = node.decorators and node.decorators.accept(self)  or ''
+         docs = node.doc and '\n%s"""%s"""' % (INDENT, node.doc) or ''
+-        return '\n%sdef %s(%s):%s\n%s' % (decorate, node.name, node.args.accept(self),
+-                                        docs, self._stmt_list(node.body))
++        returns = node.returns and ' -> %s' % node.returns.accept(self) or ''
++        return '\n%sdef %s(%s)%s:%s\n%s' % (decorate, node.name, node.args.accept(self),
++                                            returns, docs, self._stmt_list(node.body))
+ 
+     def visit_genexpr(self, node):
+         """return an astng.GenExpr node as string"""
 diff -r 168e6b411f45 node_classes.py
 --- a/node_classes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/node_classes.py	Fri Apr 26 19:23:30 2013 -0400
++++ b/node_classes.py	Sat Apr 27 14:23:40 2013 -0400
 @@ -251,6 +251,23 @@
  
  #####################   node classes   ########################################
@@ -17,7 +32,7 @@ diff -r 168e6b411f45 node_classes.py
 +
 +    def format_args(self):
 +        if self.annotation:
-+            return self.name.name + ": " + self.annotation.name
++            return self.name.name + " : " + self.annotation.as_string()
 +        else:
 +            return self.name.name
 +
@@ -36,7 +51,7 @@ diff -r 168e6b411f45 node_classes.py
              if defaults is not None and i >= default_offset:
 diff -r 168e6b411f45 nodes.py
 --- a/nodes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/nodes.py	Fri Apr 26 19:23:30 2013 -0400
++++ b/nodes.py	Sat Apr 27 14:23:40 2013 -0400
 @@ -37,7 +37,7 @@
  
  __docformat__ = "restructuredtext en"
@@ -57,8 +72,17 @@ diff -r 168e6b411f45 nodes.py
      Decorators, DelAttr, DelName, Delete,
 diff -r 168e6b411f45 rebuilder.py
 --- a/rebuilder.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/rebuilder.py	Fri Apr 26 19:23:30 2013 -0400
-@@ -812,9 +812,14 @@
++++ b/rebuilder.py	Sat Apr 27 14:23:40 2013 -0400
+@@ -30,6 +30,8 @@
+     UAdd, USub, Not, Invert,
+     # comparison operators
+     Eq, Gt, GtE, In, Is, IsNot, Lt, LtE, NotEq, NotIn,
++    # name
++    Name
+     )
+ 
+ from logilab.astng import nodes as new
+@@ -812,9 +814,49 @@
  
      def visit_arg(self, node, parent):
          """visit a arg node by returning a fresh AssName instance"""
@@ -67,12 +91,67 @@ diff -r 168e6b411f45 rebuilder.py
 -        return self.visit_assname(node, parent, node.arg)
 +        newnode = new.Arg()
 +        _set_infos(node, newnode, parent)
-+        if node.annotation is not None:
++        if node.annotation:
 +            newnode.annotation = self.visit(node.annotation, newnode)
-+        if node.arg is not None:
++        if node.arg:
 +            newnode.name = self.visit_assname(node, newnode, node.arg)
 +        newnode.set_line_info(newnode.last_child())
++        return newnode
++
++    def visit_function(self, node, parent):
++        """visit an Function node to become astng"""
++        self._global_names.append({})
++        newnode = new.Function(node.name, None)
++        _lineno_parent(node, newnode, parent)
++        _init_set_doc(node, newnode)
++        newnode.args = self.visit(node.args, newnode)
++        newnode.body = [self.visit(child, newnode) for child in node.body]
++        if 'decorators' in node._fields: # py < 2.6
++            attr = 'decorators'
++        else:
++            attr = 'decorator_list'
++        decorators = getattr(node, attr)
++        if decorators:
++            newnode.decorators = self.visit_decorators(node, newnode)
++        if node.returns:
++            newnode.returns = self.visit(node.returns, newnode)
++        newnode.set_line_info(newnode.last_child())
++        self._global_names.pop()
++        frame = newnode.parent.frame()
++        if isinstance(frame, new.Class):
++            if newnode.name == '__new__':
++                newnode.type = 'classmethod'
++            else:
++                newnode.type = 'method'
++        if newnode.decorators is not None:
++            for decorator_expr in newnode.decorators.nodes:
++                if isinstance(decorator_expr, new.Name):
++                    if decorator_expr.name in ('classmethod', 'staticmethod'):
++                        newnode.type = decorator_expr.name
++                    elif decorator_expr.name == 'classproperty':
++                        newnode.type = 'classmethod'
++        frame.set_local(newnode.name, newnode)
 +        return newnode
  
      def visit_excepthandler(self, node, parent):
          """visit an ExceptHandler node by returning a fresh instance of it"""
+diff -r 168e6b411f45 scoped_nodes.py
+--- a/scoped_nodes.py	Thu Apr 25 13:33:10 2013 +0200
++++ b/scoped_nodes.py	Sat Apr 27 14:23:40 2013 -0400
+@@ -518,7 +518,7 @@
+ 
+ 
+ class Function(Statement, Lambda):
+-    _astng_fields = ('decorators', 'args', 'body')
++    _astng_fields = ('decorators', 'args', 'returns', 'body')
+ 
+     special_attributes = set(('__name__', '__doc__', '__dict__'))
+     is_function = True
+@@ -535,6 +535,7 @@
+         self.doc = doc
+         self.extra_decorators = []
+         self.instance_attrs = {}
++        self.returns = None
+ 
+     def set_line_info(self, lastchild):
+         self.fromlineno = self.lineno
