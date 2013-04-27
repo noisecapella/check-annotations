@@ -1,6 +1,6 @@
 diff -r 168e6b411f45 as_string.py
 --- a/as_string.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/as_string.py	Sat Apr 27 14:23:40 2013 -0400
++++ b/as_string.py	Sat Apr 27 15:02:44 2013 -0400
 @@ -256,8 +256,9 @@
          """return an astng.Function node as string"""
          decorate = node.decorators and node.decorators.accept(self)  or ''
@@ -15,7 +15,7 @@ diff -r 168e6b411f45 as_string.py
          """return an astng.GenExpr node as string"""
 diff -r 168e6b411f45 node_classes.py
 --- a/node_classes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/node_classes.py	Sat Apr 27 14:23:40 2013 -0400
++++ b/node_classes.py	Sat Apr 27 15:02:44 2013 -0400
 @@ -251,6 +251,23 @@
  
  #####################   node classes   ########################################
@@ -51,7 +51,7 @@ diff -r 168e6b411f45 node_classes.py
              if defaults is not None and i >= default_offset:
 diff -r 168e6b411f45 nodes.py
 --- a/nodes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/nodes.py	Sat Apr 27 14:23:40 2013 -0400
++++ b/nodes.py	Sat Apr 27 15:02:44 2013 -0400
 @@ -37,7 +37,7 @@
  
  __docformat__ = "restructuredtext en"
@@ -72,7 +72,7 @@ diff -r 168e6b411f45 nodes.py
      Decorators, DelAttr, DelName, Delete,
 diff -r 168e6b411f45 rebuilder.py
 --- a/rebuilder.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/rebuilder.py	Sat Apr 27 14:23:40 2013 -0400
++++ b/rebuilder.py	Sat Apr 27 15:02:44 2013 -0400
 @@ -30,6 +30,8 @@
      UAdd, USub, Not, Invert,
      # comparison operators
@@ -82,7 +82,7 @@ diff -r 168e6b411f45 rebuilder.py
      )
  
  from logilab.astng import nodes as new
-@@ -812,9 +814,49 @@
+@@ -812,9 +814,52 @@
  
      def visit_arg(self, node, parent):
          """visit a arg node by returning a fresh AssName instance"""
@@ -92,7 +92,10 @@ diff -r 168e6b411f45 rebuilder.py
 +        newnode = new.Arg()
 +        _set_infos(node, newnode, parent)
 +        if node.annotation:
++            old_asscontext = self.asscontext
++            self.asscontext = None
 +            newnode.annotation = self.visit(node.annotation, newnode)
++            self.asscontext = old_asscontext
 +        if node.arg:
 +            newnode.name = self.visit_assname(node, newnode, node.arg)
 +        newnode.set_line_info(newnode.last_child())
@@ -137,7 +140,7 @@ diff -r 168e6b411f45 rebuilder.py
          """visit an ExceptHandler node by returning a fresh instance of it"""
 diff -r 168e6b411f45 scoped_nodes.py
 --- a/scoped_nodes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/scoped_nodes.py	Sat Apr 27 14:23:40 2013 -0400
++++ b/scoped_nodes.py	Sat Apr 27 15:02:44 2013 -0400
 @@ -518,7 +518,7 @@
  
  
