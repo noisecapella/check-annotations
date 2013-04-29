@@ -11,15 +11,21 @@ class TestPaths(unittest.TestCase):
             self.assertTrue(file.endswith(".py"))
 
     def test_group_no_trailing_slash(self):
-        expected = ["f", "f/e", "", "t"]
+        expected = {"/a/b/c/f": "f",
+                    "/a/b/c/f/e": "f/e",
+                    "/a/b/c": "",
+                    "/a/b/c/t": "t"}
 
-        output = list(paths.group("/a/b/c", ["/a/b/c/f", "/a/b/c/f/e", "/a/b/c", "/a/b/c/t"]))
+        output = paths.group("/a/b/c", ["/a/b/c/f", "/a/b/c/f/e", "/a/b/c", "/a/b/c/t"])
         self.assertEqual(expected, output)
 
     def test_group_trailing_slash(self):
-        expected = ["f", "f/e", "", "t"]
+        expected = {"/a/b/c/f" : "f",
+                    "/a/b/c/f/e" : "f/e",
+                    "/a/b/c": "",
+                    "/a/b/c/t": "t"}
 
-        output = list(paths.group("/a/b/c/", ["/a/b/c/f", "/a/b/c/f/e", "/a/b/c", "/a/b/c/t"]))
+        output = paths.group("/a/b/c/", ["/a/b/c/f", "/a/b/c/f/e", "/a/b/c", "/a/b/c/t"])
         self.assertEqual(expected, output)
 
 if __name__ == "__main__":

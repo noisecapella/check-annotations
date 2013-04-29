@@ -1,6 +1,5 @@
 __author__ = 'schneg'
 
-import os
 import os.path
 
 from types import GeneratorType
@@ -19,8 +18,10 @@ def make_paths(path: str) -> GeneratorType:
     else:
         raise Exception("%s is not a directory or a file" % path)
 
-def group(basedir: str, paths: GeneratorType) -> GeneratorType:
+def group(basedir: str, paths: GeneratorType) -> dict:
     """returns a relative path (relative to basedir) for each path in paths"""
+    ret = {}
+
     basedir = os.path.abspath(basedir)
     if basedir.endswith("/"):
         basedir = basedir[:-1]
@@ -33,4 +34,5 @@ def group(basedir: str, paths: GeneratorType) -> GeneratorType:
         suffix = path[len(commonprefix):]
         if suffix.startswith("/"):
             suffix = suffix[len("/"):]
-        yield suffix
+        ret[path] = suffix
+    return ret
