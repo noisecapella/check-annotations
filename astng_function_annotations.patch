@@ -1,6 +1,6 @@
 diff -r 168e6b411f45 as_string.py
 --- a/as_string.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/as_string.py	Tue Apr 30 15:57:45 2013 -0400
++++ b/as_string.py	Tue Apr 30 18:26:21 2013 -0400
 @@ -256,8 +256,9 @@
          """return an astng.Function node as string"""
          decorate = node.decorators and node.decorators.accept(self)  or ''
@@ -25,7 +25,7 @@ diff -r 168e6b411f45 as_string.py
              if node.name:
 diff -r 168e6b411f45 node_classes.py
 --- a/node_classes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/node_classes.py	Tue Apr 30 15:57:45 2013 -0400
++++ b/node_classes.py	Tue Apr 30 18:26:21 2013 -0400
 @@ -251,6 +251,23 @@
  
  #####################   node classes   ########################################
@@ -69,7 +69,7 @@ diff -r 168e6b411f45 node_classes.py
              if defaults is not None and i >= default_offset:
 diff -r 168e6b411f45 nodes.py
 --- a/nodes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/nodes.py	Tue Apr 30 15:57:45 2013 -0400
++++ b/nodes.py	Tue Apr 30 18:26:21 2013 -0400
 @@ -37,7 +37,7 @@
  
  __docformat__ = "restructuredtext en"
@@ -90,17 +90,21 @@ diff -r 168e6b411f45 nodes.py
      Decorators, DelAttr, DelName, Delete,
 diff -r 168e6b411f45 protocols.py
 --- a/protocols.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/protocols.py	Tue Apr 30 15:57:45 2013 -0400
-@@ -22,7 +22,7 @@
++++ b/protocols.py	Tue Apr 30 18:26:21 2013 -0400
+@@ -22,7 +22,11 @@
  __doctype__ = "restructuredtext en"
  
  from logilab.astng.exceptions import InferenceError, NoDefault
 -from logilab.astng.node_classes import unpack_infer
-+from logilab.astng.node_classes import unpack_infer, Arg
++from logilab.astng.node_classes import (
++    unpack_infer,
++    Arg,
++    Name
++    )
  from logilab.astng.bases import copy_context, \
       raise_if_nothing_infered, yes_if_nothing_infered, Instance, YES
  from logilab.astng.nodes import const_factory
-@@ -166,7 +166,7 @@
+@@ -166,7 +170,7 @@
                  assigned = stmt.getitem(index, context)
              except (AttributeError, IndexError):
                  continue
@@ -109,7 +113,7 @@ diff -r 168e6b411f45 protocols.py
                  continue
              if not asspath:
                  # we achieved to resolved the assignment path,
-@@ -214,6 +214,11 @@
+@@ -214,6 +218,11 @@
  nodes.AssName.assigned_stmts = assend_assigned_stmts
  nodes.AssAttr.assigned_stmts = assend_assigned_stmts
  
@@ -121,7 +125,7 @@ diff -r 168e6b411f45 protocols.py
  
  def _arguments_infer_argname(self, name, context):
      # arguments information may be missing, in which case we can't do anything
-@@ -239,12 +244,17 @@
+@@ -239,12 +248,23 @@
      # if there is a default value, yield it. And then yield YES to reflect
      # we can't guess given argument value
      try:
@@ -135,7 +139,13 @@ diff -r 168e6b411f45 protocols.py
 +
 +    for arg in self.args:
 +        if isinstance(arg, Arg):
-+            if arg.annotation:
++            if isinstance(arg.annotation, Name):
++                frame, stmts = arg.annotation.lookup(arg.annotation.name)
++                if len(stmts) >= 1:
++                    yield Instance(stmts[0])
++                else:
++                    yield Instance(arg.annotation)
++            else:
 +                yield Instance(arg.annotation)
 +    yield YES
 +
@@ -144,7 +154,7 @@ diff -r 168e6b411f45 protocols.py
  def arguments_assigned_stmts(self, node, context, asspath=None):
 diff -r 168e6b411f45 rebuilder.py
 --- a/rebuilder.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/rebuilder.py	Tue Apr 30 15:57:45 2013 -0400
++++ b/rebuilder.py	Tue Apr 30 18:26:21 2013 -0400
 @@ -30,6 +30,8 @@
      UAdd, USub, Not, Invert,
      # comparison operators
@@ -212,7 +222,25 @@ diff -r 168e6b411f45 rebuilder.py
          """visit an ExceptHandler node by returning a fresh instance of it"""
 diff -r 168e6b411f45 scoped_nodes.py
 --- a/scoped_nodes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/scoped_nodes.py	Tue Apr 30 15:57:45 2013 -0400
++++ b/scoped_nodes.py	Tue Apr 30 18:26:21 2013 -0400
+@@ -32,7 +32,7 @@
+ from logilab.astng.exceptions import NotFoundError, \
+      ASTNGBuildingException, InferenceError
+ from logilab.astng.node_classes import Const, DelName, DelAttr, \
+-     Dict, From, List, Pass, Raise, Return, Tuple, Yield, \
++     Dict, From, List, Name, Pass, Raise, Return, Tuple, Yield, \
+      LookupMixIn, const_factory as cf, unpack_infer
+ from logilab.astng.bases import NodeNG, InferenceContext, Instance,\
+      YES, Generator, UnboundMethod, BoundMethod, _infer_stmts, copy_context, \
+@@ -135,7 +135,7 @@
+             if not pscope.is_function:
+                 pscope = pscope.root()
+             return pscope.scope_lookup(node, name)
+-        return builtin_lookup(name) # Module
++        return builtin_lookup(name)
+ 
+ 
+ 
 @@ -518,7 +518,7 @@
  
  
@@ -230,3 +258,19 @@ diff -r 168e6b411f45 scoped_nodes.py
  
      def set_line_info(self, lastchild):
          self.fromlineno = self.lineno
+@@ -614,6 +615,15 @@
+         if self.is_generator():
+             yield Generator()
+             return
++        if self.returns:
++            if isinstance(self.returns, Name):
++                frame, stmts = self.lookup(self.returns.name)
++                if len(stmts) >= 1:
++                    yield Instance(stmts[0])
++                else:
++                    yield Instance(self.returns)
++            else:
++                yield Instance(self.returns)
+         returns = self.nodes_of_class(Return, skip_klass=Function)
+         for returnnode in returns:
+             if returnnode.value is None:
