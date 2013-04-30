@@ -25,8 +25,9 @@ class ModuleTree:
         for abs_path, rel_path in relative_paths.items():
             with open(abs_path) as f:
                 code = f.read()
-            tree = abuilder.string_build(code)
             module_path = rel_path.replace("/", ".").replace("-", "_")
             if module_path.endswith(".py"):
                 module_path = module_path[:-len(".py")]
+
+            tree = abuilder.string_build(code, modname=module_path)
             self.modules[module_path] = tree
