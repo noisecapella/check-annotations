@@ -1,6 +1,6 @@
 diff -r 168e6b411f45 as_string.py
 --- a/as_string.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/as_string.py	Mon Apr 29 22:58:10 2013 -0400
++++ b/as_string.py	Mon Apr 29 23:33:51 2013 -0400
 @@ -256,8 +256,9 @@
          """return an astng.Function node as string"""
          decorate = node.decorators and node.decorators.accept(self)  or ''
@@ -13,9 +13,19 @@ diff -r 168e6b411f45 as_string.py
  
      def visit_genexpr(self, node):
          """return an astng.GenExpr node as string"""
+@@ -427,6 +428,9 @@
+ class AsStringVisitor3k(AsStringVisitor):
+     """AsStringVisitor3k overwrites some AsStringVisitor methods"""
+ 
++    def visit_arg(self, node):
++        return node.format_args()
++
+     def visit_excepthandler(self, node):
+         if node.type:
+             if node.name:
 diff -r 168e6b411f45 node_classes.py
 --- a/node_classes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/node_classes.py	Mon Apr 29 22:58:10 2013 -0400
++++ b/node_classes.py	Mon Apr 29 23:33:51 2013 -0400
 @@ -251,6 +251,23 @@
  
  #####################   node classes   ########################################
@@ -59,7 +69,7 @@ diff -r 168e6b411f45 node_classes.py
              if defaults is not None and i >= default_offset:
 diff -r 168e6b411f45 nodes.py
 --- a/nodes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/nodes.py	Mon Apr 29 22:58:10 2013 -0400
++++ b/nodes.py	Mon Apr 29 23:33:51 2013 -0400
 @@ -37,7 +37,7 @@
  
  __docformat__ = "restructuredtext en"
@@ -80,7 +90,7 @@ diff -r 168e6b411f45 nodes.py
      Decorators, DelAttr, DelName, Delete,
 diff -r 168e6b411f45 protocols.py
 --- a/protocols.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/protocols.py	Mon Apr 29 22:58:10 2013 -0400
++++ b/protocols.py	Mon Apr 29 23:33:51 2013 -0400
 @@ -214,6 +214,11 @@
  nodes.AssName.assigned_stmts = assend_assigned_stmts
  nodes.AssAttr.assigned_stmts = assend_assigned_stmts
@@ -95,7 +105,7 @@ diff -r 168e6b411f45 protocols.py
      # arguments information may be missing, in which case we can't do anything
 diff -r 168e6b411f45 rebuilder.py
 --- a/rebuilder.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/rebuilder.py	Mon Apr 29 22:58:10 2013 -0400
++++ b/rebuilder.py	Mon Apr 29 23:33:51 2013 -0400
 @@ -30,6 +30,8 @@
      UAdd, USub, Not, Invert,
      # comparison operators
@@ -163,7 +173,7 @@ diff -r 168e6b411f45 rebuilder.py
          """visit an ExceptHandler node by returning a fresh instance of it"""
 diff -r 168e6b411f45 scoped_nodes.py
 --- a/scoped_nodes.py	Thu Apr 25 13:33:10 2013 +0200
-+++ b/scoped_nodes.py	Mon Apr 29 22:58:10 2013 -0400
++++ b/scoped_nodes.py	Mon Apr 29 23:33:51 2013 -0400
 @@ -518,7 +518,7 @@
  
  
