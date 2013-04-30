@@ -6,14 +6,12 @@ import os.path
 
 from logilab.astng import builder
 from logilab.astng.utils import ASTWalker
-from logilab.astng.scoped_nodes import Module
 
 from logilab.astng.as_string import dump
 
-from paths import (
-    group,
-    make_paths,
-)
+from check import check
+
+from module_tree import ModuleTree
 
 abuilder = builder.ASTNGBuilder()
 
@@ -32,32 +30,7 @@ def print_module_tree(module_path, tree):
     print("In path %s" % module_path)
     print(dump(tree))
 
-def check(module_path, tree):
-    print("In path %s" % module_path)
-    #TODO
 
-class ModuleTree:
-    def __init__(self, root):
-        self.modules = {}
-
-        if os.path.isfile(root):
-            basedir, _ = os.path.split(root)
-            basedir = os.path.abspath(basedir)
-            paths = [os.path.abspath(root)]
-        elif os.path.isdir(root):
-            basedir = os.path.abspath(root)
-            paths = make_paths(root)
-
-        relative_paths = group(basedir, paths)
-
-        for abs_path, rel_path in relative_paths.items():
-            with open(abs_path) as f:
-                code = f.read()
-            tree = abuilder.string_build(code)
-            module_path = rel_path.replace("/", ".").replace("-", "_")
-            if module_path.endswith(".py"):
-                module_path = module_path[:-len(".py")]
-            self.modules[module_path] = tree
 
 
 def main():
@@ -66,6 +39,7 @@ def main():
                                                ' or a path to a single Python file')
     parser.add_argument("--print-code", action='store_true')
     parser.add_argument("--print-tree", action='store_true')
+    parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
 
     module_tree = ModuleTree(args.path)
@@ -75,6 +49,8 @@ def main():
     elif args.print_tree:
         for module_path, tree in module_tree.modules.items():
             print_module_tree(module_path, tree)
+    elif args.check:
+        check(module_tree)
 
 if __name__ == "__main__":
     main()
