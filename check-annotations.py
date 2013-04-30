@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import os
 import os.path
@@ -8,20 +10,12 @@ from logilab.astng.scoped_nodes import Module
 
 from logilab.astng.as_string import dump
 
+from paths import (
+    group,
+    make_paths,
+)
+
 abuilder = builder.ASTNGBuilder()
-
-def make_paths(path) -> list:
-    """returns a collection of python file paths"""
-
-    if os.path.isfile(path):
-        yield path
-    elif os.path.isdir(path):
-        for root, dirs, files in os.walk(path):
-            for file in files:
-                if file.endswith(".py"):
-                    yield os.path.join(root, file)
-    else:
-        raise Exception("%s is not a directory or a file" % path)
 
 class PrintAll:
     def set_context(self, node, child_node):
@@ -30,19 +24,38 @@ class PrintAll:
     def visit_module(self, node):
         print(node.as_string())
 
-def print_module_code(path):
-    print("In path %s" % path)
-    with open(path) as f:
-        code = f.read()
-    obj = abuilder.string_build(code)
-    ASTWalker(PrintAll()).walk(obj)
+def print_module_code(module_path, tree):
+    print("In path %s" % module_path)
+    ASTWalker(PrintAll()).walk(tree)
 
-def print_module_tree(path):
-    print("In path %s" % path)
-    with open(path) as f:
-        code = f.read()
-    obj = abuilder.string_build(code)
-    print(dump(obj))
+def print_module_tree(module_path, tree):
+    print("In path %s" % module_path)
+    print(dump(tree))
+
+def check(module_path, tree):
+    print("In path %s" % module_path)
+    #TODO
+
+class ModuleTree:
+    def __init__(self, root):
+        self.modules = {}
+
+        if os.path.isfile(root):
+            basedir, _ = os.path.split(root)
+            basedir = os.path.abspath(basedir)
+            paths = [os.path.abspath(root)]
+        elif os.path.isdir(root):
+            basedir = os.path.abspath(root)
+            paths = make_paths(root)
+
+        relative_paths = group(basedir, paths)
+
+        for abs_path, rel_path in relative_paths.items():
+            with open(abs_path) as f:
+                code = f.read()
+            tree = abuilder.string_build(code)
+            module_path = rel_path.replace("/", ".")
+            self.modules[module_path] = tree
 
 
 def main():
@@ -53,13 +66,13 @@ def main():
     parser.add_argument("--print-tree", action='store_true')
     args = parser.parse_args()
 
-    paths = make_paths(args.path)
+    module_tree = ModuleTree(args.path)
     if args.print_code:
-        for path in paths:
-            print_module_code(path)
+        for module_path, tree in module_tree.modules.items():
+            print_module_code(module_path, tree)
     elif args.print_tree:
-        for path in paths:
-            print_module_tree(path)
+        for module_path, tree in module_tree.modules.items():
+            print_module_tree(module_path, tree)
 
 if __name__ == "__main__":
     main()
