@@ -1,6 +1,6 @@
 diff -r ccfb3c64f6e9 as_string.py
 --- a/as_string.py	Wed Jul 24 09:06:48 2013 +0200
-+++ b/as_string.py	Tue Jul 30 23:04:23 2013 -0400
++++ b/as_string.py	Tue Jul 30 23:10:41 2013 -0400
 @@ -256,8 +256,9 @@
          """return an astroid.Function node as string"""
          decorate = node.decorators and node.decorators.accept(self)  or ''
@@ -24,7 +24,7 @@ diff -r ccfb3c64f6e9 as_string.py
              if node.name:
 diff -r ccfb3c64f6e9 node_classes.py
 --- a/node_classes.py	Wed Jul 24 09:06:48 2013 +0200
-+++ b/node_classes.py	Tue Jul 30 23:04:23 2013 -0400
++++ b/node_classes.py	Tue Jul 30 23:10:41 2013 -0400
 @@ -251,6 +251,23 @@
  
  #####################   node classes   ########################################
@@ -60,7 +60,7 @@ diff -r ccfb3c64f6e9 node_classes.py
              if defaults is not None and i >= default_offset:
 diff -r ccfb3c64f6e9 nodes.py
 --- a/nodes.py	Wed Jul 24 09:06:48 2013 +0200
-+++ b/nodes.py	Tue Jul 30 23:04:23 2013 -0400
++++ b/nodes.py	Tue Jul 30 23:10:41 2013 -0400
 @@ -37,7 +37,7 @@
  
  __docformat__ = "restructuredtext en"
@@ -81,7 +81,7 @@ diff -r ccfb3c64f6e9 nodes.py
      Decorators, DelAttr, DelName, Delete,
 diff -r ccfb3c64f6e9 protocols.py
 --- a/protocols.py	Wed Jul 24 09:06:48 2013 +0200
-+++ b/protocols.py	Tue Jul 30 23:04:23 2013 -0400
++++ b/protocols.py	Tue Jul 30 23:10:41 2013 -0400
 @@ -22,7 +22,11 @@
  __doctype__ = "restructuredtext en"
  
@@ -146,7 +146,7 @@ diff -r ccfb3c64f6e9 protocols.py
      if context.callcontext:
 diff -r ccfb3c64f6e9 rebuilder.py
 --- a/rebuilder.py	Wed Jul 24 09:06:48 2013 +0200
-+++ b/rebuilder.py	Tue Jul 30 23:04:23 2013 -0400
++++ b/rebuilder.py	Tue Jul 30 23:10:41 2013 -0400
 @@ -31,6 +31,8 @@
      UAdd, USub, Not, Invert,
      # comparison operators
@@ -212,7 +212,7 @@ diff -r ccfb3c64f6e9 rebuilder.py
          newnode = super(TreeRebuilder3k, self).visit_arguments(node, parent)
 diff -r ccfb3c64f6e9 scoped_nodes.py
 --- a/scoped_nodes.py	Wed Jul 24 09:06:48 2013 +0200
-+++ b/scoped_nodes.py	Tue Jul 30 23:04:23 2013 -0400
++++ b/scoped_nodes.py	Tue Jul 30 23:10:41 2013 -0400
 @@ -32,7 +32,7 @@
  from astroid.exceptions import NotFoundError, \
       AstroidBuildingException, InferenceError
