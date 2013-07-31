@@ -4,16 +4,16 @@ import argparse
 import os
 import os.path
 
-from logilab.astng import builder
-from logilab.astng.utils import ASTWalker
+from astroid import builder
+from astroid.utils import ASTWalker
 
-from logilab.astng.as_string import dump
+from astroid.as_string import dump
 
 from check import check
 
 from module_tree import ModuleTree
 
-abuilder = builder.ASTNGBuilder()
+abuilder = builder.AstroidBuilder()
 
 class PrintAll:
     def set_context(self, node, child_node):

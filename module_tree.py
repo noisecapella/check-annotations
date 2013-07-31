@@ -4,9 +4,9 @@ import os
 
 from paths import make_paths, group
 
-from logilab.astng import builder
-from logilab.astng.utils import ASTWalker
-abuilder = builder.ASTNGBuilder()
+from astroid import builder
+from astroid.utils import ASTWalker
+abuilder = builder.AstroidBuilder()
 
 class ModuleTree:
     def __init__(self, root):
