@@ -27,3 +27,10 @@ Current steps:
 - Before installing astroid, cd to the astroid directory and run `patch -p1 < /path/to/check-annotations/astroid-function-annotations.patch`
 - Install astroid using `python setup.py install`
 - Now you can run `python check-annotations.py --check filename.py`, or use `--help` to list other options 
+
+Example
+-------
+
+python check-annotations.py --check test_files/fib/fib.py
+
+See how the y variable is some kind of int: [<Instance of builtins.int at 0x44422992>, <Const(int) l.3 [fib] at Ox2a5dfd0>, YES, <Const(int) l.None [int] at Ox2a5d9d0>]
