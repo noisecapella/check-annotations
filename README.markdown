@@ -31,6 +31,6 @@ Current steps:
 Example
 -------
 
-python check-annotations.py --check test_files/fib/fib.py
+`python check-annotations.py --check test_files/fib/fib.py`
 
-See how the y variable is some kind of int: [<Instance of builtins.int at 0x44422992>, <Const(int) l.3 [fib] at Ox2a5dfd0>, YES, <Const(int) l.None [int] at Ox2a5d9d0>]
+See how the y variable is some kind of int: `[<Instance of builtins.int at 0x44422992>, <Const(int) l.3 [fib] at Ox2a5dfd0>, YES, <Const(int) l.None [int] at Ox2a5d9d0>]`
