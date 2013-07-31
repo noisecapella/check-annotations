@@ -7,19 +7,20 @@ abuilder = builder.AstroidBuilder()
 
 from module_tree import ModuleTree
 
+def infer(node):
+    try:
+        return list(node.infer())
+    except InferenceError:
+        return ""
+
 class PrintArg:
     def set_context(self, node, child_node):
         pass
 
     def visit_assname(self, node):
-        print(node.as_string(), type(node), list(node.infer()))
+        print(node.as_string(), type(node), infer(node))
 
     def visit_callfunc(self, node):
-        def infer(node):
-            try:
-                return list(node.infer())
-            except InferenceError:
-                return ""
         print(node.as_string(), type(node), infer(node))
 
     def visit_default(self, node):
