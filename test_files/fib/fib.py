@@ -3,4 +3,4 @@ def fib(x: int) -> int:
         return 1
     else:
         return fib(x-1) + fib(x-2)
-y = g(6)
+y = fib(6)
