@@ -19,6 +19,8 @@ class ModuleTree:
         elif os.path.isdir(root):
             basedir = os.path.abspath(root)
             paths = make_paths(root)
+        else:
+            raise Exception("Not a directory or file: %s" % root)
 
         relative_paths = group(basedir, paths)
 
