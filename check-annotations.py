@@ -30,9 +30,6 @@ def print_module_tree(module_path, tree):
     print("In path %s" % module_path)
     print(dump(tree))
 
-
-
-
 def main():
     parser = argparse.ArgumentParser(description='Statically check types for consistency')
     parser.add_argument('path', type=str, help='path to directory containing Python files,'
@@ -51,6 +48,8 @@ def main():
             print_module_tree(module_path, tree)
     elif args.check:
         check(module_tree)
+    else:
+        raise Exception("One option must be selected")
 
 if __name__ == "__main__":
     main()
