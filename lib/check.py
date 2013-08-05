@@ -5,8 +5,6 @@ from astroid.utils import ASTWalker
 from astroid.exceptions import InferenceError
 abuilder = builder.AstroidBuilder()
 
-from module_tree import ModuleTree
-
 from collections import defaultdict
 
 def infer(node):
@@ -14,12 +12,6 @@ def infer(node):
         return list(node.infer())
     except InferenceError:
         return ""
-
-def join_module(a, b):
-    if a:
-        return a + "." + b
-    else:
-        return b
 
 class MatchFunc:
     def __init__(self, path, funcs):
@@ -73,18 +65,14 @@ class PrintArg:
         print(node.as_string(), type(node))
 
 
-def check(module_tree: ModuleTree):
+def check(path : str, node):
     # TODO: astroid must keep track of function information somewhere
     # we should use that instead of recording it here
 
     funcs = {}
-    for path, tree in module_tree.modules.items():
-        print()
-        print("In path %s %s" % (path, tree))
-        ASTWalker(CatchFunc(path, funcs)).walk(tree)
+    print("In path %s %s" % (path, node))
+    ASTWalker(CatchFunc(path, funcs)).walk(node)
 
-    for path, tree in module_tree.modules.items():
-        print()
-        print("In path %s %s" % (path, tree))
-        ASTWalker(MatchFunc(path, funcs)).walk(tree)
+    print("In path %s %s" % (path, node))
+    ASTWalker(MatchFunc(path, funcs)).walk(node)
 

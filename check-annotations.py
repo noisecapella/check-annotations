@@ -4,16 +4,12 @@ import argparse
 import os
 import os.path
 
-from astroid import builder
+from astroid.manager import AstroidManager
 from astroid.utils import ASTWalker
 
 from astroid.as_string import dump
 
-from check import check
-
-from module_tree import ModuleTree
-
-abuilder = builder.AstroidBuilder()
+from lib.check import check
 
 class PrintAll:
     def set_context(self, node, child_node):
@@ -39,15 +35,16 @@ def main():
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
 
-    module_tree = ModuleTree(args.path)
+    path = args.path
+    manager = AstroidManager()
+    node = manager.ast_from_file(path)
+    
     if args.print_code:
-        for module_path, tree in module_tree.modules.items():
-            print_module_code(module_path, tree)
+        print_module_code(args.path, node)
     elif args.print_tree:
-        for module_path, tree in module_tree.modules.items():
-            print_module_tree(module_path, tree)
+        print_module_tree(args.path, node)
     elif args.check:
-        check(module_tree)
+        check(args.path, node)
     else:
         raise Exception("One option must be selected")
 
